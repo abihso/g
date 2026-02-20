@@ -1,0 +1,56 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "binary" // classic engine, works on Node 20
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // <- make sure .env exists
+}
+
+model User {
+  id        Int    @id @default(autoincrement())
+  email     String @unique
+  password  String
+  fname     String
+  lname     String
+  address   String
+  school    String
+  dob       String
+  gender    String
+  number    String
+  img       String
+  memberpin String @unique
+  status    String
+}
+
+model Benefit {
+  id                Int    @id @default(autoincrement())
+  email             String
+  fname             String
+  lname             String
+  address           String
+  saddress          String
+  pschool           String
+  cschool           String
+  date              String
+  applicant_number  String
+  head_number       String
+  benefit           String
+  oldpayslip        String
+  currentpayslip    String
+  supportdocuments  String
+  supportdocument   String
+  memberpin         String
+  approved_by       String
+  status            String
+}
+
+model Message {
+  id      Int    @id @default(autoincrement())
+  title   String
+  message String
+  by      String
+}
