@@ -7,12 +7,13 @@ import { connectDb,disconnectDb } from "./config/db.js";
 
 const app = express()
 env.config()
-app.use( 
-  cors({
-    origin: ["https://pf-iota-one.vercel.app/api"], 
-    credentials: true, 
-  })
-);
+
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173','https://pf-iota-one.vercel.app/api'], // Your frontend URLs
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json())
 app.use(express.urlencoded({ extended: false })) 
 // app.use(helmet());
