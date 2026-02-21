@@ -9,7 +9,7 @@ const app = express()
 env.config()
 app.use( 
   cors({
-    origin: "*", 
+    origin: ["https://pf-iota-one.vercel.app/api"], 
     credentials: true, 
   })
 );
@@ -30,6 +30,6 @@ app.get("/", (req, res) => {
     message: "successfully" 
   }); 
 })
-// app.listen(5001, () => console.log("server is running")) 
-export default app;
+app.listen(5001, () => console.log("server is running")) 
+
 // disconnectDb()
