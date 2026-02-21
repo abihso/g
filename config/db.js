@@ -14,8 +14,8 @@ export const connectDb = async () => {
     console.error(err);
     process.exit(1);
   }
-};
-
+}; 
+ 
 export const disconnectDb = async () => {
   await prisma.$disconnect();
 };

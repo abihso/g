@@ -42,7 +42,7 @@ export const getMessage = async (id) => {
   })
   return message
 }
-export const removeMessage = async (id) => {
+export const removeMessage = async (id) => { 
   await prisma.message.delete({
     where : { id : Number(id) }
   })

@@ -30,6 +30,6 @@ app.get("/", (req, res) => {
     message: "successfully" 
   }); 
 })
-app.listen(5001, () => console.log("server is running")) 
-
+// app.listen(5001, () => console.log("server is running")) 
+export default app;
 // disconnectDb()
