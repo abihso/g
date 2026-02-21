@@ -18,13 +18,13 @@ app.use(express.urlencoded({ extended: false }));
 
 connectDb();
 
-app.use("/api/admin", adminRoute);
-app.use("/api/auth", authroute);
+app.use("/admin", adminRoute);
+app.use("/auth", authroute);
 
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "successfully"
+    message: "Good"
   });
 });
 
