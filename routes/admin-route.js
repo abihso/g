@@ -173,12 +173,12 @@ adminRoute.get("/get-file/:name/:type", (req, res) => {
   if (req.params.type === "image") {
     pathToFile = path.join(
     __dirname,
-    "../uploads","members","images",req.params.name
+    "/tmp/uploads","members","images",req.params.name
   )
   } else {
     pathToFile = path.join(
     __dirname,
-    "../uploads","applications","documents",req.params.name
+    "/tmp/uploads","applications","documents",req.params.name
     )
     return res.status(200).download(pathToFile, (data,error) => {
       if(error) return {message : error.message}

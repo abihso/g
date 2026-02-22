@@ -45,7 +45,6 @@ const storage = multer.diskStorage({
 
     // Ensure the directory exists
     ensureDirExists(folder);
-    console.log(`Uploading to: ${folder}`); // For debugging
     cb(null, folder);
   },
   filename: (req, file, cb) => {
