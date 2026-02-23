@@ -89,7 +89,6 @@ authroute.post("/logout", (req, res) => {
 
 authroute.patch("/update-password", async (req, res) => {
   const data = req.body
-  
   // Validate required fields
   if (!data.pin || !data.oldPassword || !data.newPassword) {
     return res.status(400).json({ 

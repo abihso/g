@@ -20,7 +20,6 @@ const getUploadBasePath = () => {
 const ensureDirExists = (folder) => {
   if (!fs.existsSync(folder)) {
     fs.mkdirSync(folder, { recursive: true });
-    console.log(`Created directory: ${folder}`);
   }
 };
 

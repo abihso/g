@@ -317,22 +317,44 @@ export const updateRecord = async (id, status, approved_by) => {
   return updateInfor
 }
 
-export const pay = async (memberpin, approved_by,benefit) => {
-  const updateInfor = await prisma.benefit.update({
-    where: {
-      AND: [
-        {
-          memberpin
-        },
-        {
-          benefit
-        }
-      ]
-    },
-    data: {
-      status : "Claimed",
-      approved_by
+
+
+export const pay = async (memberpin, approved_by, benefit) => {
+  try {
+    // Validate input parameters
+    if (!memberpin || !approved_by || !benefit) {
+      throw new Error('Missing required parameters')
     }
-  })
-  return updateInfor
+
+    const updateInfor = await prisma.benefit.updateMany({
+      where: {
+        memberpin: memberpin,
+        benefit: benefit
+      },
+      data: {
+        status: "Claimed",
+        approved_by: approved_by
+      }
+    })
+
+    // Check if any records were updated
+    if (updateInfor.count === 0) {
+      throw new Error('No matching benefit record found')
+    }
+
+    // If you need to return the actual updated record, you'll need to fetch it
+    const updatedRecord = await prisma.benefit.findFirst({
+      where: {
+        memberpin: memberpin,
+        benefit: benefit,
+        status: "Claimed"
+      }
+    })
+
+    return updatedRecord || updateInfor
+
+  } catch (error) {
+    console.error('Error updating benefit status:', error)
+    throw new Error(`Failed to update benefit: ${error.message}`)
+  }
 }

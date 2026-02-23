@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { upload } from "../utils/multer.js";
 import path from "path"
-import fs from "fs";
 import { fileURLToPath } from "url";
 import { createNewMember,createMessage,getMessages,removeMessage,createNewAdmin,getMembers,getSingleMember,updateMember,removeMember,verifyClaim,registerBenefit,adminRegisterBenefit,getAllSpecificApplications,getAllApplications,getSingleApplication,searchMember,searchBenefit,updateRecord,pay, getAllSpecificApplicationsByUser, getAllApplicationsByMember, getMessage } from "../services/prisma-functions.js";
 import { hashPassword } from "../utils/password.js";
@@ -169,95 +168,25 @@ adminRoute.get("/get-single-application/:id",async (req, res) => {
      return res.status(400).json({success : false,message : error.message})
   }
 })
-adminRoute.get("/get-file/:name/:type", async (req, res) => {
-  try {
-    const { name, type } = req.params;
-    
-    // Security: Prevent directory traversal attacks
-    const safeName = path.basename(name); // Removes any path components
-    
-    // Determine if running on Vercel
-    const isVercel = process.env.VERCEL === '1';
-    
-    // Build the correct path based on environment
-    let basePath;
-    if (isVercel) {
-      basePath = '/tmp/uploads';
-    } else {
-      // Local development path - adjust based on your project structure
-      basePath = path.join(__dirname, '..', 'uploads'); // Go up one level from routes
-    }
-    
-    // Construct full file path based on type
-    let filePath;
-    if (type === "image") {
-      filePath = path.join(basePath, "members", "images", safeName);
-    } else if (type === "document") {
-      filePath = path.join(basePath, "applications", "documents", safeName);
-    } else {
-      return res.status(400).json({ 
-        message: "Invalid file type. Use 'image' or 'document'" 
-      });
-    }
-
-    // Check if file exists
-    if (!fs.existsSync(filePath)) {
-      console.error(`File not found: ${filePath}`);
-      return res.status(404).json({ 
-        message: "File not found",
-        path: isVercel ? 'temp' : filePath // Don't expose full path in production
-      });
-    }
-
-    // Get file stats for additional info
-    const stat = fs.statSync(filePath);
-    
-    // Set appropriate headers
-    res.setHeader('Content-Length', stat.size);
-    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
-    
-    // For images: display in browser
-    if (type === "image") {
-      // Determine content type based on file extension
-      const ext = path.extname(filePath).toLowerCase();
-      const mimeTypes = {
-        '.jpg': 'image/jpeg',
-        '.jpeg': 'image/jpeg',
-        '.png': 'image/png',
-        '.gif': 'image/gif',
-        '.webp': 'image/webp',
-        '.pdf': 'application/pdf'
-      };
-      
-      const contentType = mimeTypes[ext] || 'application/octet-stream';
-      res.setHeader('Content-Type', contentType);
-      
-      // Send file for display
-      return res.status(200).sendFile(filePath);
-    } 
-    // For documents: force download
-    else {
-      // Set filename for download
-      const fileName = path.basename(filePath);
-      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-      
-      // Download the file
-      return res.status(200).download(filePath, fileName, (err) => {
-        if (err) {
-          console.error("Download error:", err);
-          // Can't send response here as headers might already be sent
-        }
-      });
-    }
-    
-  } catch (error) {
-    console.error("File retrieval error:", error);
-    return res.status(500).json({ 
-      message: "Error retrieving file",
-      error: error.message 
-    });
+adminRoute.get("/get-file/:name/:type", (req, res) => {
+  let pathToFile
+  if (req.params.type === "image") {
+    pathToFile = path.join(
+    __dirname,
+    "../uploads","members","images",req.params.name
+  )
+  } else {
+    pathToFile = path.join(
+    __dirname,
+    "../uploads","applications","documents",req.params.name
+    )
+    return res.status(200).download(pathToFile, (data,error) => {
+      if(error) return {message : error.message}
+    })
   }
-});
+ 
+  return res.status(200).sendFile(pathToFile);
+})
 adminRoute.patch("/update-record/:id/:status/:verified_by",async (req, res) => {
   const { id, status,verified_by } = req.params
   try {
@@ -268,12 +197,12 @@ adminRoute.patch("/update-record/:id/:status/:verified_by",async (req, res) => {
   }
 })
 adminRoute.patch("/pay-benefit", async(req, res) => {
-  const { pin,benefit,approved_by } = req.body
+  const { pin,benefit,approved_by } = req.body 
   try {
     const verify = await verifyClaim(benefit, pin)
     if(typeof verify[0] === "undefined") throw new Error(`${benefit} benefit has not been applied for yet`)   
     if (verify && verify[0].status === "Approved") {
-      pay(pin, approved_by,benefit)
+      await pay(pin, approved_by,benefit)
       return res.status(200).json({success : true,message:`benefit paid`})
     }
     throw new Error(`${benefit} benefit has not been approved or has already been paid for`)

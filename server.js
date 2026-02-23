@@ -11,7 +11,7 @@ env.config()
 app.use(cors({
   origin: ['http://localhost:5173', 'http://127.0.0.1:5173','https://pf-iota-one.vercel.app'], 
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS','PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json())
@@ -20,7 +20,7 @@ app.use(express.urlencoded({ extended: false }))
 // app.use(rateLimit({
 //   windowMs: 15 * 60 * 1000,
 //   max: 200
-// }));
+// })); 
 connectDb()
 app.use("/api/admin", adminRoute) 
 app.use("/api/auth", authroute) 
