@@ -7,13 +7,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Check if running on Vercel
-const isVercel = process.env.VERCEL === '1';
+// const isVercel = process.env.VERCEL === '1';
 
 // Use /tmp for Vercel, local uploads for development
 const getUploadBasePath = () => {
-  if (isVercel) {
-    return '/tmp/uploads';
-  }
+  // if (isVercel) {
+  //   return '/tmp/uploads';
+  // }
   return path.join(__dirname, '../uploads');
 };
 
