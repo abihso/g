@@ -6,7 +6,7 @@ import authroute from "./routes/auth-route.js";
 import { connectDb,disconnectDb } from "./config/db.js";
 
 const app = express()
-env.config()
+env.config() 
 
 app.use(cors({
   origin: ['http://localhost:5173', 'http://127.0.0.1:5173','https://pf-iota-one.vercel.app'], 

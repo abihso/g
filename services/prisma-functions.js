@@ -38,7 +38,7 @@ export const getMessage = async (id) => {
   const message = await prisma.message.findMany({
     where: {
       id
-    }
+    } 
   })
   return message
 }
@@ -46,6 +46,9 @@ export const removeMessage = async (id) => {
   await prisma.message.delete({
     where : { id : Number(id) }
   })
+}
+export const removeAllBenefit = async () => { 
+  await prisma.benefit.deleteMany()
 }
 export const createNewAdmin = async (payloadData) => {
   const newAdmin = await prisma.user.create({

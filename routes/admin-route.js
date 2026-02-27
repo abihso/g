@@ -2,13 +2,14 @@ import { Router } from "express";
 import { upload } from "../utils/multer.js";
 import path from "path"
 import { fileURLToPath } from "url";
-import { createNewMember,createMessage,getMessages,removeMessage,createNewAdmin,getMembers,getSingleMember,updateMember,removeMember,verifyClaim,registerBenefit,adminRegisterBenefit,getAllSpecificApplications,getAllApplications,getSingleApplication,searchMember,searchBenefit,updateRecord,pay, getAllSpecificApplicationsByUser, getAllApplicationsByMember, getMessage } from "../services/prisma-functions.js";
+import { v2 as cloudinary } from "cloudinary";
+import { createNewMember,createMessage,getMessages,removeMessage,createNewAdmin,getMembers,getSingleMember,updateMember,removeMember,verifyClaim,registerBenefit,adminRegisterBenefit,getAllSpecificApplications,getAllApplications,getSingleApplication,searchMember,searchBenefit,updateRecord,pay, getAllSpecificApplicationsByUser, getAllApplicationsByMember, getMessage, removeAllBenefit } from "../services/prisma-functions.js";
 import { hashPassword } from "../utils/password.js";
 const adminRoute = Router()
-const __filename = fileURLToPath(import.meta.url);
+const __filename = fileURLToPath(import.meta.url); 
 const __dirname = path.dirname(__filename);
 
-adminRoute.post("/send-message", upload.any(), async (req, res) => {
+adminRoute.post("/send-message", async (req, res) => {
 try {
   const infor = req.body
     await createMessage(infor)
@@ -25,33 +26,41 @@ adminRoute.get("/get-single-message/:id", async (req, res) => {
   const message = await getMessage(Number(req.params.id))
   return res.status(200).json({success:true,data:message})
 })
-adminRoute.delete("/delete-message/:id", (req, res) => {
+adminRoute.delete("/delete-message/:id",async (req, res) => {
   try {
-    removeMessage(req.params.id)
+   await removeMessage(req.params.id)
     return res.status(200).json({ success: true, message: "message deleted" })
   } catch (error) {
     return res.status(400).json({success : false,message:"problem deleting message",error :error.message})
   }
 })
+adminRoute.delete("/delete-benefits", async (req, res) => {
+  try {
+    await removeAllBenefit()
+    return res.status(200).json({ success: true, message: "benefits deleted" })
+  } catch (error) {
+    return res.status(400).json({success : false,message:"problem deleting benefits",error :error.message})
+  }
+})
 adminRoute.post("/register-member", upload.any(), async (req, res) => {
   try {
       const infor = req.body
-      infor.img = req.files[0].filename
-      infor.password = hashPassword(infor.fname)
+      infor.img = req.files[0].path
+      infor.password = hashPassword(infor.fname) 
       await createNewMember(infor)
       return res.status(201).json({success : true,message:"user created"})
     } catch (error) {
       return res.status(400).json({success:false,message:"problem saving user",...error})
     }
+
+   
 })
 adminRoute.post("/register-admin", upload.any(), async (req, res) => {
   try {
       const infor = req.body
-    // infor.img = req.files[0].filename || ""
-      infor.img = ""
+      infor.img = req.files[0].path
       infor.password = hashPassword(infor.fname)
-      // infor.status = "admin"
-      const results = await createNewAdmin(infor)
+      await createNewAdmin(infor)
       return res.status(201).json({success : true,message:"user created"})
   } catch (error) {
         return res.status(400).json({success:false,message:"problem saving user",...error})
@@ -96,14 +105,7 @@ adminRoute.get("/get-all-applications/:status/:memberpin/:user", async (req, res
     return res.status(400).json({ success : false,message : error.message})
   }
 })
-adminRoute.get("/get-all-applications/:column/:value", async (req, res) => {
-  try {
-    const data = await getAllSpecificApplications(req.params.column, req.params.value)
-    return res.status(200).json({ success : true,data})
-  } catch (error) {
-    return res.status(400).json({ success : false,message : error.message})
-  }
-})
+
 adminRoute.get("/get-all-applications", async (req, res) => {
   try {
     const data = await getAllApplications()
@@ -123,10 +125,10 @@ adminRoute.get("/get-all-applications-by-member/:memberpin", async (req, res) =>
 })
 adminRoute.post("/process-member-application",upload.any(),async (req, res) => {
   const data = req.body
-  data.oldpayslip = req.files[0].filename
-  data.currentpayslip = req.files[1].filename
-  data.supportdocuments = req.files[2].filename
-  data.supportdocument = req.files[3].filename
+  data.oldpayslip = req.files[0].path
+  data.currentpayslip = req.files[1].path
+  data.supportdocuments = req.files[2].path
+  data.supportdocument = req.files[3].path
   try {
     ////////////////////////  
     if (data.benefit == "death of parent" || data.benefit == "death of spouse" || data.benefit == "death of member" || data.benefit == "marriage"|| data.benefit == "retirement" || data.benefit == "release"|| data.benefit == "death of child" || data.benefit == "wrongful deduction" || data.benefit == "disaster" || data.benefit == "hospitalization") {
@@ -150,9 +152,9 @@ adminRoute.post("/process-member-application",upload.any(),async (req, res) => {
 })
 adminRoute.post("/admin-process-member-application",upload.any(),async(req, res) => {
   const data = req.body
-  data.oldpayslip = "req.files[0].filename"
-  data.currentpayslip = "req.files[1].filename"
-  data.supportdocuments = "req.files[2].filename"
+  data.oldpayslip = req.files[0].path
+  data.currentpayslip = req.files[1].path
+  data.supportdocuments = req.files[2].path
   try {
     const results = adminRegisterBenefit(data)
   } catch (error) {
@@ -168,25 +170,65 @@ adminRoute.get("/get-single-application/:id",async (req, res) => {
      return res.status(400).json({success : false,message : error.message})
   }
 })
-adminRoute.get("/get-file/:name/:type", (req, res) => {
-  let pathToFile
-  if (req.params.type === "image") {
-    pathToFile = path.join(
-    __dirname,
-    "../uploads","members","images",req.params.name
-  )
-  } else {
-    pathToFile = path.join(
-    __dirname,
-    "../uploads","applications","documents",req.params.name
-    )
-    return res.status(200).download(pathToFile, (data,error) => {
-      if(error) return {message : error.message}
-    })
+adminRoute.post("/get-file", (req, res) => {
+  console.log("=== DOWNLOAD ENDPOINT HIT ===");
+  console.log("Request body:", req.body); 
+  console.log("Request headers:", req.headers);
+  
+  try {
+    const { filename } = req.body;
+    console.log("Filename extracted:", filename);
+    
+    if (!filename) {
+      console.log("ERROR: No filename provided");
+      return res.status(400).json({ 
+        success: false, 
+        message: "Filename is required" 
+      });
+    }
+
+    // Extract public_id from the filename
+    let publicId = filename;
+    
+    if (filename.includes('cloudinary.com')) {
+      console.log("Detected Cloudinary URL");
+      const urlParts = filename.split('/');
+      const uploadIndex = urlParts.indexOf('upload');
+      if (uploadIndex !== -1) {
+        const afterUpload = urlParts.slice(uploadIndex + 1).join('/');
+        publicId = afterUpload.replace(/^v\d+\//, '');
+      }
+    } else {
+      console.log("Treating as direct filename");
+      publicId = `images/${filename}`;
+    }
+
+    publicId = publicId.replace(/\.[^/.]+$/, "");
+    console.log("Final publicId:", publicId); 
+
+    const downloadUrl = cloudinary.url(publicId, {
+      flags: "attachment",
+      secure: true,
+      resource_type: "auto",
+    });
+
+    console.log("Generated downloadUrl:", downloadUrl);
+
+    return res.status(200).json({ 
+      success: true,
+      downloadUrl: downloadUrl,
+      filename: filename,
+      message: "File ready for download"
+    });
+
+  } catch (error) {
+    console.error("CATCH ERROR:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: error.message 
+    });
   }
- 
-  return res.status(200).sendFile(pathToFile);
-})
+});
 adminRoute.patch("/update-record/:id/:status/:verified_by",async (req, res) => {
   const { id, status,verified_by } = req.params
   try {
