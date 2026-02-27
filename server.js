@@ -3,6 +3,8 @@ import adminRoute from "./routes/admin-route.js"
 import cors from "cors"
 import env from "dotenv"
 import authroute from "./routes/auth-route.js";
+import helmet from "helmet"
+import rateLimit from "express-rate-limit"
 import { connectDb,disconnectDb } from "./config/db.js";
 
 const app = express()
