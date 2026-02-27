@@ -16,11 +16,11 @@ app.use(cors({
 }));
 app.use(express.json())
 app.use(express.urlencoded({ extended: false })) 
-// app.use(helmet());
-// app.use(rateLimit({
-//   windowMs: 15 * 60 * 1000,
-//   max: 200
-// })); 
+app.use(helmet());
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200
+})); 
 connectDb()
 app.use("/api/admin", adminRoute) 
 app.use("/api/auth", authroute) 
